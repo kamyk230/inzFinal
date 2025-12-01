@@ -1,0 +1,6 @@
+pip install opencv-python
+pip install ultralytics
+pip install pandas
+pip install openpyxl
+sudo apt-get install python3-tk
+pip install torch==1.13.0+cu121 torchvision==0.14.0+cu121 torchaudio==0.13.0+cu121 -f https://download.pytorch.org/whl/cu121/torch_stable.html
