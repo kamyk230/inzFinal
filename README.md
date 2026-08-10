@@ -5,8 +5,7 @@ Aplikacja napisana w języku Python służąca do analizy natężenia ruchu drog
 ## Wymagania i instalacja
 
 Aby uruchomić projekt, wymagany jest Python w wersji przynajmniej 3.10. Reszta zależności znajduje się w pliku requirements.txt.
-
-1. Instalacja biblioteki systemowej dla interfejsu graficznego oraz wymaganych pakietów:
+Instalacja biblioteki systemowej dla interfejsu graficznego oraz wymaganych pakietów:
 ```bash
 sudo apt-get install python3-tk
 pip install opencv-python
