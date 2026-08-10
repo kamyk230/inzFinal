@@ -14,7 +14,7 @@ pip install ultralytics
 pip install pandas
 pip install openpyxl
 pip install torch==1.13.0+cu121 torchvision==0.14.0+cu121 torchaudio==0.13.0+cu121 -f [https://download.pytorch.org/whl/cu121/torch_stable.html](https://download.pytorch.org/whl/cu121/torch_stable.html)
-
+```
 ## Struktura projektu
 
 Projekt składa się z następujących modułów:
