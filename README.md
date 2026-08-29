@@ -8,7 +8,7 @@ Aplikacja desktopowa do zliczania pojazdów na nagraniu lub strumieniu z kamery.
 
 ## Co robi aplikacja
 
-- Wykrywa samochody, ciężarówki, autobusy i motocykle (klasy COCO, model YOLOv8)
+- Wykrywa samochody, ciężarówki i motocykle (klasy COCO, model YOLOv8)
 - Przypisuje obiektom stałe ID między klatkami (śledzenie po środkach ciężkości bboxów)
 - Zlicza przejazdy przez linię w obu kierunkach (góra/dół albo lewo/prawo)
 - Pracuje na pliku wideo albo kamerze
