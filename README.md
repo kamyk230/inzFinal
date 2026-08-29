@@ -97,5 +97,4 @@ W eksporcie zapisują się m.in. liczba pojazdów w wybranym interwale czasowym 
 ├── utils.py
 ├── coco.txt              # nazwy klas COCO
 ├── requirements.txt
-└── main.spec             # PyInstaller (opcjonalny build .exe)
 ```
