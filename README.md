@@ -1,51 +1,101 @@
-# Program do analizy natężenia ruchu drogowego (Python + YOLOv8 + OpenCV)
+# Analiza natężenia ruchu drogowego
 
-Aplikacja napisana w języku Python służąca do analizy natężenia ruchu drogowego. Przyjmuje na wejściu zrealizowane wcześniej nagranie bądź strumień na żywo z kamery a następnie zlicza przejeżdżające pojazdy. Po przeanalizowaniu nagrania program ma możliwość zapisać zgromadzone dane w arkuszu kalkulacyjnym.
+Aplikacja desktopowa do zliczania pojazdów na nagraniu lub strumieniu z kamery. Detekcja oparta jest o **YOLOv8**, śledzenie o własny tracker centroidowy, a zliczanie o wirtualną linię (poziomą lub pionową) z rozróżnieniem kierunku przejazdu. Wyniki można eksportować do **Excela** wraz z parametrami badania (model, rozdzielczość, FP16, czas inferencji).
 
-## Wymagania i instalacja
+**Stack:** Python 3.10+ · YOLOv8 (Ultralytics) · OpenCV · PyTorch (CPU/CUDA) · Tkinter · pandas
 
-Aby uruchomić projekt, wymagany jest Python w wersji przynajmniej 3.10. Reszta zależności znajduje się w pliku requirements.txt.
-Instalacja biblioteki systemowej dla interfejsu graficznego oraz wymaganych pakietów:
-```bash
-sudo apt-get install python3-tk
-pip install opencv-python
-pip install ultralytics
-pip install pandas
-pip install openpyxl
-pip install torch==1.13.0+cu121 torchvision==0.14.0+cu121 torchaudio==0.13.0+cu121 -f [https://download.pytorch.org/whl/cu121/torch_stable.html](https://download.pytorch.org/whl/cu121/torch_stable.html)
+---
+
+## Co robi aplikacja
+
+- Wykrywa samochody, ciężarówki, autobusy i motocykle (klasy COCO, model YOLOv8)
+- Przypisuje obiektom stałe ID między klatkami (śledzenie po środkach ciężkości bboxów)
+- Zlicza przejazdy przez linię w obu kierunkach (góra/dół albo lewo/prawo)
+- Pracuje na pliku wideo albo kamerze
+- Umożliwia porównanie wariantów modelu (`n` / `s` / `m`), rozdzielczości, progu *confidence* i trybu FP16
+- Zapisuje zagregowane wyniki do `.xlsx` (liczniki + metryki inferencji)
+
+## Architektura
+
+```mermaid
+flowchart LR
+    GUI[Tkinter GUI] --> A[analysis.py]
+    A --> YOLO[YOLOv8]
+    A --> T[Tracker]
+    YOLO --> T
+    T --> L[Linia zliczająca]
+    L --> XLSX[Excel]
+    A --> CV[Podgląd OpenCV]
 ```
-## Struktura projektu
 
-Projekt składa się z następujących modułów:
+| Moduł | Rola |
+| --- | --- |
+| `main.py` | Punkt wejścia, uruchamia okno konfiguracji |
+| `gui.py` | Panel parametrów, wybór źródła, kolejka komunikatów, wątek analizy |
+| `analysis.py` | Pętla wideo: inferencja, tracking, zliczanie, HUD, eksport |
+| `tracker.py` | Matching detekcji między klatkami (odległość euklidesowa + timeout ID) |
+| `model_handler.py` | Ładowanie wag YOLO na CPU albo GPU |
+| `utils.py` | Lista klas COCO, zapis Excel, komunikaty błędów |
 
-* `main.py` – Główny skrypt uruchamiający aplikację i inicjalizujący interfejs użytkownika.
-* `gui.py` – Definicja i obsługa okna aplikacji w oparciu o bibliotekę Tkinter. Odpowiada za parametry konfiguracyjne (wybór urządzenia, modelu, rozdzielczości, itp.) oraz delegację zadań.
-* `analysis.py` – Główny silnik przetwarzania wideo. Odpowiada za odczyt klatek z OpenCV, uruchamianie inferencji, logikę zliczania obiektów przekraczających wirtualną linię oraz agregację danych do eksportu.
-* `tracker.py` – Implementacja algorytmu śledzenia obiektów na podstawie środków ciężkości. Oblicza odległości między detekcjami na kolejnych klatkach i zarządza unikalnymi identyfikatorami.
-* `model_handler.py` – Klasa zarządzająca wczytywaniem i obsługą modeli YOLO, odpowiedzialna za transfer modelu na odpowiednie urządzenie obliczeniowe (CPU/GPU).
-* `utils.py` – Zbiór funkcji pomocniczych, wykorzystywanych do ładowania nazw klas, eksportu danych do plików Excel oraz wyświetlania komunikatów o błędach.
-## Instrukcja obsługi
+## Wymagania
 
-1. Uruchomienie aplikacji:
-Aby włączyć program, należy uruchomić główny skrypt z poziomu terminala, będąc w głównym katalogu projektu:
+- Python **3.10+**
+- Opcjonalnie: GPU NVIDIA + CUDA, jeśli ma iść inferencja na karcie
+- Tkinter (w standardzie Pythona; na Debian/Ubuntu: `python3-tk`)
+
+## Instalacja
+
+```bash
+python -m venv .venv
+# Windows:
+.venv\Scripts\activate
+# Linux / macOS:
+# source .venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+`requirements.txt` wskazuje koła PyTorch z CUDA 12.1. Na samym CPU użyj oficjalnego indeksu CPU albo pomiń `cu121`.
+
+Wagi YOLOv8 (`yolov8n.pt`, `yolov8s.pt`, `yolov8m.pt`) pobierają się automatycznie przy pierwszym uruchomieniu wybranego modelu.
+
+## Uruchomienie
+
 ```bash
 python main.py
 ```
-Konfiguracja w panelu GUI:
 
-Urządzenie: Wybierz obliczenia na CPU lub GPU (wymaga kompatybilnej karty graficznej NVIDIA i zainstalowanego środowiska CUDA).
+1. Wybierz **CPU** albo **GPU** i zatwierdź urządzenie.
+2. Ustaw model, rozdzielczość analizy, próg pewności i ewentualnie FP16.
+3. Wybierz orientację linii, wpisz pozycję w pikselach i sprawdź ją przyciskiem podglądu.
+4. Zaznacz klasy pojazdów i źródło (plik albo kamera).
+5. **Display** — podgląd na żywo; **Record** — analiza i zapis `.xlsx`.
+6. **Uruchom analizę.**
 
-Parametry badawcze: Wybierz wariant modelu YOLOv8, docelową rozdzielczość analizy oraz próg pewności (Confidence). Opcjonalnie włącz tryb FP16 dla przyspieszenia obliczeń.
+Skróty w oknie podglądu: **spacja** pauza, **Q** koniec.
 
-Linia zliczająca: Wpisz pozycję linii w pikselach, wybierz jej orientację (pozioma/pionowa) i zweryfikuj prawidłowość ustawienia używając przycisku podglądu.
+## Parametry, które da się porównać
 
-Źródło wideo: Wczytaj z dysku plik wideo lub zaznacz opcję użycia kamery.
+Aplikacja była projektowana pod pomiary, nie tylko pod jeden „gotowy” przebieg:
 
-Tryb pracy: Wybierz "Display" dla samego podglądu na żywo lub "Record" w celu przeprowadzenia analizy z automatycznym zapisem wyników do pliku arkusza kalkulacyjnego .xlsx.
+- wariant YOLOv8 (nano / small / medium)
+- rozdzielczość wejścia sieci (wielokrotności 32)
+- próg *confidence*
+- inferencja FP16 na GPU
+- pomijanie co N-tej klatki (kompromis szybkość / dokładność)
 
-Kontrola analizy:
-Po skonfigurowaniu parametrów naciśnij "URUCHOM ANALIZĘ". W trakcie działania programu aktywne okno podglądu reaguje na skróty klawiszowe:
+W eksporcie zapisują się m.in. liczba pojazdów w wybranym interwale czasowym (w tym niepełny ostatni odcinek) oraz przybliżone FPS inferencji.
 
-Spacja – pauzuje i wznawia analizę,
+## Struktura repozytorium
 
-Q – przerywa analizę i zamyka okno podglądu.
+```
+├── main.py
+├── gui.py
+├── analysis.py
+├── tracker.py
+├── model_handler.py
+├── utils.py
+├── coco.txt              # nazwy klas COCO
+├── requirements.txt
+└── main.spec             # PyInstaller (opcjonalny build .exe)
+```
